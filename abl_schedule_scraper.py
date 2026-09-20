@@ -2,7 +2,7 @@
 ABL (Australian Baseball League) schedule scraper.
 
 Data source
-------------
+===========
 theabl.com.au is a Nuxt.js front end whose schedule/scores data is loaded
 client-side from MLB Advanced Media's public Stats API (the same backend
 used for MLB, MiLB and several international winter leagues). This was
@@ -19,19 +19,21 @@ Endpoint used:
         &leagueId=595        -> Australian Baseball League
         &startDate=YYYY-MM-DD
         &endDate=YYYY-MM-DD
-        &hydrate=team,linescore,venue
+        &hydrate=team,venue
 
 This was verified live: querying leagueId=595 for a November 2025 date
-range returned real ABL games (Sydney Blue Sox @ Brisbane Bandits, etc.)
-with correct team names, scores and venues.
+range returned real, finished ABL games (Sydney Blue Sox 8 - Brisbane
+Bandits 1, etc.) with correct team names, scores and venues, and a
+2026 query confirmed the next ABL season's first games are scheduled
+for 2026-11-19 (Brisbane Bandits @ Adelaide Giants).
 
 Output shape mirrors the project's existing npb_schedule_scraper.py:
     {
       "bijgewerkt": "<ISO 8601 UTC timestamp>",
       "bron": "<the exact Stats API URL that was queried>",
       "season": <int>,
-      "results": [ ...finished games... ],
-      "schedule": [ ...upcoming games... ]
+      "results": [ ...most recent completed game day... ],
+      "schedule": [ ...next upcoming game day... ]
     }
 
 Each game entry:
@@ -55,15 +57,28 @@ Unlike the NPB scraper, the ABL has a single league (no Central/Pacific
 split), so "league" is always the constant "Australian Baseball League" -
 kept as a field for structural consistency with the NPB JSON.
 
-A game is bucketed into "results" if the Stats API reports it Final
-(abstractGameState == "Final"), otherwise into "schedule" (Preview,
-Live, Postponed, etc. all count as "not yet a final result").
+Why a wide fetch window instead of a fixed +/- few days
+========================================================
+The ABL only plays roughly mid-November to late January/early February,
+so a narrow "yesterday to +2 days" window (the NPB scraper's approach,
+which plays a near-daily schedule) is empty most of the year. Per an
+explicit request, this scraper is expected to ALWAYS have something in
+"schedule" (and "results" once a season has been played), even months
+into the off-season.
 
-Window fetched: yesterday -> today+2 days (5 days total), which comfortably
-covers "yesterday/today" results and "today/tomorrow" upcoming games the
-same way the NPB scraper does, while tolerating days with no games (e.g.
-the ABL off-season, when the API simply returns zero games and this
-script writes empty results/schedule arrays rather than failing).
+To do that, this script fetches a generous window - LOOKBACK_DAYS in the
+past through LOOKAHEAD_DAYS in the future (about 13 months each way,
+comfortably spanning any ABL off-season gap) - and then:
+  - "results" = every game on the single most recent date that has at
+    least one Final game (i.e. the latest completed game day, however
+    long ago that was).
+  - "schedule" = every game on the single earliest future date that has
+    at least one not-yet-Final game (i.e. the next upcoming game day,
+    however far off that is - even if it's next season).
+
+If the wide window happens to contain no games at all in one direction
+(e.g. brand new league with no history yet), that list is simply left
+empty rather than the script failing.
 """
 
 import json
@@ -76,37 +91,39 @@ SPORT_ID = 17          # Winter Leagues
 LEAGUE_ID = 595         # Australian Baseball League
 OUTPUT_FILE = "abl_schedule.json"
 
-DAYS_BEFORE = 1
-DAYS_AFTER = 2
+# Wide enough to always bridge the ABL's multi-month off-season in both
+# directions (season runs roughly mid-Nov to early Feb each year).
+LOOKBACK_DAYS = 400
+LOOKAHEAD_DAYS = 400
 
 
 def abl_season_for_date(d):
     """
-    The ABL season labelled e.g. "2026" runs roughly from
-    mid-February of that year through to February of the following
-    year (pre-season start ~Feb 15, championship in late Jan/early Feb).
-    So a calendar date before ~Feb 15 belongs to the PREVIOUS season
-    label. This only affects the informational "season" field and the
-    optional &season= query param; the actual date range (startDate/
-    endDate) is what really determines which games come back.
+    The ABL season labelled e.g. "2026" runs roughly from mid-February
+    of that year through to February of the following year (pre-season
+    start ~Feb 15, championship in late Jan/early Feb). So a calendar
+    date before ~Feb 15 belongs to the PREVIOUS season label. This is
+    purely informational (the "season" field in the output) - the
+    actual date range below is what determines which games come back,
+    and the API is queried without a &season= param so it isn't
+    affected by this boundary at all.
     """
     if (d.month, d.day) < (2, 15):
         return d.year - 1
     return d.year
 
 
-def fetch_schedule(start_date, end_date, season):
+def fetch_schedule(start_date, end_date):
     params = (
         f"?sportId={SPORT_ID}"
         f"&leagueId={LEAGUE_ID}"
-        f"&season={season}"
         f"&startDate={start_date.isoformat()}"
         f"&endDate={end_date.isoformat()}"
         f"&hydrate=team,venue"
     )
     url = STATS_API_BASE + params
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=60) as resp:
         data = json.loads(resp.read().decode("utf-8"))
     return url, data
 
@@ -140,17 +157,18 @@ def build_game_entry(game):
 
 def main():
     today = datetime.now(timezone.utc).date()
-    start_date = today - timedelta(days=DAYS_BEFORE)
-    end_date = today + timedelta(days=DAYS_AFTER)
-    season = abl_season_for_date(today)
+    start_date = today - timedelta(days=LOOKBACK_DAYS)
+    end_date = today + timedelta(days=LOOKAHEAD_DAYS)
 
     try:
-        source_url, data = fetch_schedule(start_date, end_date, season)
+        source_url, data = fetch_schedule(start_date, end_date)
     except (urllib.error.URLError, urllib.error.HTTPError) as exc:
         raise SystemExit(f"Failed to fetch ABL schedule from Stats API: {exc}")
 
-    results = []
-    schedule = []
+    # Group every game we got back by its officialDate, splitting each
+    # day's games into "final" vs "not final yet".
+    finished_by_date = {}
+    upcoming_by_date = {}
 
     for day in data.get("dates", []):
         for game in day.get("games", []):
@@ -160,15 +178,30 @@ def main():
                 # Skip malformed/unexpected entries (e.g. split-squad
                 # exhibition rows) rather than failing the whole run.
                 continue
-            if entry["played"]:
-                results.append(entry)
-            else:
-                schedule.append(entry)
+
+            date_key = entry["date"]
+            bucket = finished_by_date if entry["played"] else upcoming_by_date
+            bucket.setdefault(date_key, []).append(entry)
+
+    today_str = today.isoformat()
+
+    # "results": all games on the most recent date (<= today) that had
+    # at least one finished game.
+    past_dates = [d for d in finished_by_date if d <= today_str]
+    results = finished_by_date[max(past_dates)] if past_dates else []
+
+    # "schedule": all games on the earliest date (>= today) that had at
+    # least one not-yet-finished game. Falls back to any future date if
+    # none land exactly on/after today (defensive; shouldn't happen).
+    future_dates = [d for d in upcoming_by_date if d >= today_str]
+    if not future_dates:
+        future_dates = list(upcoming_by_date.keys())
+    schedule = upcoming_by_date[min(future_dates)] if future_dates else []
 
     output = {
         "bijgewerkt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "bron": source_url,
-        "season": season,
+        "season": abl_season_for_date(today),
         "results": results,
         "schedule": schedule,
     }
@@ -177,9 +210,10 @@ def main():
         json.dump(output, f, indent=2, ensure_ascii=False)
 
     print(
-        f"Wrote {OUTPUT_FILE}: {len(results)} result(s), "
+        f"Wrote {OUTPUT_FILE}: {len(results)} result(s) "
+        f"(latest completed day: {results[0]['date'] if results else 'none found'}), "
         f"{len(schedule)} scheduled game(s) "
-        f"({start_date} to {end_date}, season {season})."
+        f"(next game day: {schedule[0]['date'] if schedule else 'none found'})."
     )
 
 
