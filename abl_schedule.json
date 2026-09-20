@@ -1,6 +1,6 @@
 {
-  "bijgewerkt": "2026-09-20T10:48:56Z",
-  "bron": "https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2025-08-16&endDate=2027-10-25&hydrate=team,venue",
+  "bijgewerkt": "2026-09-20T11:01:40Z",
+  "bron": "https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2025-08-16&endDate=2026-09-20&hydrate=team,venue | https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2026-09-20&endDate=2027-10-25&hydrate=team,venue",
   "season": 2026,
   "results": [
     {
@@ -19,5 +19,36 @@
       "boxscore_url": "https://theabl.com.au/game/838661"
     }
   ],
-  "schedule": []
+  "schedule": [
+    {
+      "league": "Australian Baseball League",
+      "date": "2026-11-19",
+      "game_number": 1,
+      "venue": "Dicolor Australia Stadium",
+      "start_time": "2026-11-19T08:30:00Z",
+      "away_team": "Brisbane Bandits",
+      "away_logo": "https://www.mlbstatic.com/team-logos/4065.svg",
+      "away_score": null,
+      "home_team": "Adelaide Giants",
+      "home_logo": "https://www.mlbstatic.com/team-logos/4064.svg",
+      "home_score": null,
+      "played": false,
+      "boxscore_url": "https://theabl.com.au/game/851294"
+    },
+    {
+      "league": "Australian Baseball League",
+      "date": "2026-11-19",
+      "game_number": 1,
+      "venue": "NSR Hire Ballpark",
+      "start_time": "2026-11-19T11:00:00Z",
+      "away_team": "Sydney Blue Sox",
+      "away_logo": "https://www.mlbstatic.com/team-logos/4069.svg",
+      "away_score": null,
+      "home_team": "Perth Heat",
+      "home_logo": "https://www.mlbstatic.com/team-logos/4068.svg",
+      "home_score": null,
+      "played": false,
+      "boxscore_url": "https://theabl.com.au/game/851255"
+    }
+  ]
 }
