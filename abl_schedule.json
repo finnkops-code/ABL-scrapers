@@ -1,7 +1,23 @@
 {
-  "bijgewerkt": "2026-09-20T10:42:35Z",
-  "bron": "https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&season=2026&startDate=2026-09-19&endDate=2026-09-22&hydrate=team,venue",
+  "bijgewerkt": "2026-09-20T10:48:56Z",
+  "bron": "https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2025-08-16&endDate=2027-10-25&hydrate=team,venue",
   "season": 2026,
-  "results": [],
+  "results": [
+    {
+      "league": "Australian Baseball League",
+      "date": "2026-01-25",
+      "game_number": 1,
+      "venue": "Blacktown International Sportspark",
+      "start_time": "2026-01-25T07:00:00Z",
+      "away_team": "Adelaide Giants",
+      "away_logo": "https://www.mlbstatic.com/team-logos/4064.svg",
+      "away_score": 6,
+      "home_team": "Sydney Blue Sox",
+      "home_logo": "https://www.mlbstatic.com/team-logos/4069.svg",
+      "home_score": 2,
+      "played": true,
+      "boxscore_url": "https://theabl.com.au/game/838661"
+    }
+  ],
   "schedule": []
 }
