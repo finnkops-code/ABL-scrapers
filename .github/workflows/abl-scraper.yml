@@ -1,18 +1,19 @@
 # ============================================================
 # ABL Scraper — standalone workflow
 # ============================================================
-# Runs the ABL (Australian Baseball League) schedule scraper on
-# a schedule, then commits the updated JSON file back to this
-# repo, only if something actually changed.
+# Runs both ABL (Australian Baseball League) scrapers - schedule
+# and standings - on a schedule, then commits the updated JSON
+# files back to this repo in one commit, only if something
+# actually changed.
 #
 # HOW TO USE
 # 1. Save this file as .github/workflows/abl-scraper.yml in this
-#    repository (alongside abl_schedule_scraper.py at the repo
-#    root).
+#    repository (alongside abl_schedule_scraper.py and
+#    abl_standings_scraper.py at the repo root).
 # 2. Adjust the cron schedule below to however often you want
-#    fresh ABL data (currently every 6 hours). The scraper only
-#    needs the Python standard library, so no requirements.txt
-#    or extra installs are required.
+#    fresh ABL data (currently every 6 hours). Both scrapers only
+#    need the Python standard library, so no requirements.txt or
+#    extra installs are required.
 # ============================================================
 
 name: ABL Scraper
@@ -43,16 +44,21 @@ jobs:
           python-version: "3.11"
 
       - name: Run ABL schedule scraper
+        continue-on-error: true
         run: python abl_schedule_scraper.py
+
+      - name: Run ABL standings scraper
+        continue-on-error: true
+        run: python abl_standings_scraper.py
 
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add abl_schedule.json
+          git add abl_schedule.json abl_standings.json
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update ABL schedule data"
+            git commit -m "Update ABL schedule and standings data"
             git push
           fi
