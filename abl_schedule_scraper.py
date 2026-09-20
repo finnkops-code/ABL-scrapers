@@ -30,7 +30,7 @@ for 2026-11-19 (Brisbane Bandits @ Adelaide Giants).
 Output shape mirrors the project's existing npb_schedule_scraper.py:
     {
       "bijgewerkt": "<ISO 8601 UTC timestamp>",
-      "bron": "<the exact Stats API URL that was queried>",
+      "bron": "<the two Stats API URLs that were queried>",
       "season": <int>,
       "results": [ ...most recent completed game day... ],
       "schedule": [ ...next upcoming game day... ]
@@ -57,8 +57,8 @@ Unlike the NPB scraper, the ABL has a single league (no Central/Pacific
 split), so "league" is always the constant "Australian Baseball League" -
 kept as a field for structural consistency with the NPB JSON.
 
-Why a wide fetch window instead of a fixed +/- few days
-========================================================
+Why two separate fetches instead of one wide one
+=================================================
 The ABL only plays roughly mid-November to late January/early February,
 so a narrow "yesterday to +2 days" window (the NPB scraper's approach,
 which plays a near-daily schedule) is empty most of the year. Per an
@@ -66,19 +66,32 @@ explicit request, this scraper is expected to ALWAYS have something in
 "schedule" (and "results" once a season has been played), even months
 into the off-season.
 
-To do that, this script fetches a generous window - LOOKBACK_DAYS in the
-past through LOOKAHEAD_DAYS in the future (about 13 months each way,
-comfortably spanning any ABL off-season gap) - and then:
-  - "results" = every game on the single most recent date that has at
-    least one Final game (i.e. the latest completed game day, however
-    long ago that was).
-  - "schedule" = every game on the single earliest future date that has
-    at least one not-yet-Final game (i.e. the next upcoming game day,
-    however far off that is - even if it's next season).
+The first version of this script fetched one combined window (400 days
+back through 400 days forward) in a single request. That turned out to
+silently break: the Stats API caps how many games a single schedule
+request returns (confirmed live - a single query spanning ~800 days
+returned only the ~87 games of the most recently completed season and
+simply dropped every game from the *next* season, even though those
+games fall well inside the requested date range, with no error and no
+indication in the response that anything was cut off).
 
-If the wide window happens to contain no games at all in one direction
-(e.g. brand new league with no history yet), that list is simply left
-empty rather than the script failing.
+The fix is to make two independent, one-directional requests instead of
+one two-directional request, since each direction alone comfortably
+stays under whatever that cap is (confirmed live: a look-back-only
+request and a look-forward-only request each returned their full,
+untruncated season of games):
+  - a "look back" request, [today - LOOKBACK_DAYS, today], to find
+    "results" = every game on the single most recent date that has at
+    least one Final game (the latest completed game day, however long
+    ago that was).
+  - a "look forward" request, [today, today + LOOKAHEAD_DAYS], to find
+    "schedule" = every game on the single earliest date that has at
+    least one not-yet-Final game (the next upcoming game day, however
+    far off that is - even if it's next season).
+
+If one of the two directions happens to contain no games at all (e.g. a
+brand new league with no history yet), that list is simply left empty
+rather than the script failing.
 """
 
 import json
@@ -92,7 +105,8 @@ LEAGUE_ID = 595         # Australian Baseball League
 OUTPUT_FILE = "abl_schedule.json"
 
 # Wide enough to always bridge the ABL's multi-month off-season in both
-# directions (season runs roughly mid-Nov to early Feb each year).
+# directions (season runs roughly mid-Nov to early Feb each year), but
+# each direction is fetched separately - see module docstring for why.
 LOOKBACK_DAYS = 400
 LOOKAHEAD_DAYS = 400
 
@@ -155,21 +169,12 @@ def build_game_entry(game):
     }
 
 
-def main():
-    today = datetime.now(timezone.utc).date()
-    start_date = today - timedelta(days=LOOKBACK_DAYS)
-    end_date = today + timedelta(days=LOOKAHEAD_DAYS)
-
-    try:
-        source_url, data = fetch_schedule(start_date, end_date)
-    except (urllib.error.URLError, urllib.error.HTTPError) as exc:
-        raise SystemExit(f"Failed to fetch ABL schedule from Stats API: {exc}")
-
-    # Group every game we got back by its officialDate, splitting each
-    # day's games into "final" vs "not final yet".
-    finished_by_date = {}
-    upcoming_by_date = {}
-
+def games_by_date(data, want_played):
+    """
+    Group every game in a schedule response by officialDate, keeping
+    only games whose Final-ness matches want_played.
+    """
+    grouped = {}
     for day in data.get("dates", []):
         for game in day.get("games", []):
             try:
@@ -178,29 +183,40 @@ def main():
                 # Skip malformed/unexpected entries (e.g. split-squad
                 # exhibition rows) rather than failing the whole run.
                 continue
+            if entry["played"] != want_played:
+                continue
+            grouped.setdefault(entry["date"], []).append(entry)
+    return grouped
 
-            date_key = entry["date"]
-            bucket = finished_by_date if entry["played"] else upcoming_by_date
-            bucket.setdefault(date_key, []).append(entry)
 
+def main():
+    today = datetime.now(timezone.utc).date()
     today_str = today.isoformat()
+
+    back_start = today - timedelta(days=LOOKBACK_DAYS)
+    forward_end = today + timedelta(days=LOOKAHEAD_DAYS)
+
+    try:
+        back_url, back_data = fetch_schedule(back_start, today)
+        forward_url, forward_data = fetch_schedule(today, forward_end)
+    except (urllib.error.URLError, urllib.error.HTTPError) as exc:
+        raise SystemExit(f"Failed to fetch ABL schedule from Stats API: {exc}")
 
     # "results": all games on the most recent date (<= today) that had
     # at least one finished game.
+    finished_by_date = games_by_date(back_data, want_played=True)
     past_dates = [d for d in finished_by_date if d <= today_str]
     results = finished_by_date[max(past_dates)] if past_dates else []
 
     # "schedule": all games on the earliest date (>= today) that had at
-    # least one not-yet-finished game. Falls back to any future date if
-    # none land exactly on/after today (defensive; shouldn't happen).
+    # least one not-yet-finished game.
+    upcoming_by_date = games_by_date(forward_data, want_played=False)
     future_dates = [d for d in upcoming_by_date if d >= today_str]
-    if not future_dates:
-        future_dates = list(upcoming_by_date.keys())
     schedule = upcoming_by_date[min(future_dates)] if future_dates else []
 
     output = {
         "bijgewerkt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "bron": source_url,
+        "bron": f"{back_url} | {forward_url}",
         "season": abl_season_for_date(today),
         "results": results,
         "schedule": schedule,
