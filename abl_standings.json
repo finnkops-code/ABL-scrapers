@@ -1,0 +1,60 @@
+{
+  "bijgewerkt": "2026-09-20T11:15:24Z",
+  "bron": "https://statsapi.mlb.com/api/v1/standings?leagueId=595&season=2026&sportId=17 | https://statsapi.mlb.com/api/v1/teams?sportId=17&leagueId=595&season=2026",
+  "season": 2026,
+  "placeholder": true,
+  "standings": [
+    {
+      "rank": 1,
+      "team": "Adelaide Giants",
+      "logo": "https://www.mlbstatic.com/team-logos/4064.svg",
+      "wins": 0,
+      "losses": 0,
+      "pct": ".000",
+      "games_back": "-",
+      "streak": "-",
+      "runs_scored": 0,
+      "runs_allowed": 0,
+      "run_differential": 0
+    },
+    {
+      "rank": 2,
+      "team": "Brisbane Bandits",
+      "logo": "https://www.mlbstatic.com/team-logos/4065.svg",
+      "wins": 0,
+      "losses": 0,
+      "pct": ".000",
+      "games_back": "-",
+      "streak": "-",
+      "runs_scored": 0,
+      "runs_allowed": 0,
+      "run_differential": 0
+    },
+    {
+      "rank": 3,
+      "team": "Perth Heat",
+      "logo": "https://www.mlbstatic.com/team-logos/4068.svg",
+      "wins": 0,
+      "losses": 0,
+      "pct": ".000",
+      "games_back": "-",
+      "streak": "-",
+      "runs_scored": 0,
+      "runs_allowed": 0,
+      "run_differential": 0
+    },
+    {
+      "rank": 4,
+      "team": "Sydney Blue Sox",
+      "logo": "https://www.mlbstatic.com/team-logos/4069.svg",
+      "wins": 0,
+      "losses": 0,
+      "pct": ".000",
+      "games_back": "-",
+      "streak": "-",
+      "runs_scored": 0,
+      "runs_allowed": 0,
+      "run_differential": 0
+    }
+  ]
+}
