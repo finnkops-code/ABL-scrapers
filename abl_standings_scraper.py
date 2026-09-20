@@ -26,9 +26,15 @@ scraper should still always render a table rather than nothing. So when
 the Stats API returns no standings records for the current season, this
 script builds a placeholder table instead:
   - every team that is actually rostered for that season (fetched live
-    from the Stats API's own team list for that season, so this doesn't
-    need to be hardcoded and self corrects if the league adds or drops
-    a franchise),
+    from the Stats API's own team list filtered by &season={season}, so
+    this doesn't need to be hardcoded and self corrects if the league
+    adds or drops a franchise). Note this deliberately does NOT use the
+    Stats API's activeStatus=Active flag: that flag is not a reliable
+    signal of current league membership, since Canberra Cavalry and
+    Melbourne Aces both left the ABL after 2024 but are still reported
+    as active=true by the API. The ABL currently consists of 4 teams
+    (Adelaide Giants, Brisbane Bandits, Perth Heat, Sydney Blue Sox),
+    confirmed via both season=2025 and season=2026 team list queries,
   - sorted alphabetically by team name (since there is no real
     performance to rank by yet),
   - every stat at zero (0 wins, 0 losses, ".000" pct, "-" games back and
@@ -121,19 +127,34 @@ def fetch_standings(season):
 
 def fetch_active_teams(season):
     """
-    Every team rostered for the given season, used both to build the
-    zero position fallback and to resolve full team names/logos.
+    Every team actually rostered for the given season, used both to
+    build the zero position fallback and to resolve full team
+    names/logos.
+
+    Filtered by &season={season}, NOT by activeStatus=Active. The
+    Stats API's own "active" flag is not a reliable signal of current
+    league membership: Canberra Cavalry and Melbourne Aces both left
+    the ABL after the 2024 season, but the Stats API still reports
+    them as active=true (they just haven't played an ABL game since,
+    so their "season" field is stuck on 2024). Filtering by season
+    correctly reflects the real, current 4-team league (Adelaide
+    Giants, Brisbane Bandits, Perth Heat, Sydney Blue Sox) - this was
+    verified live against both season=2025 and season=2026.
+
+    Falls back to the previous season if the requested season's team
+    list happens to come back empty (e.g. queried before the Stats API
+    has tagged any team for a brand new season yet), rather than
+    falling back to all-time active teams, which would incorrectly
+    resurrect departed franchises.
     """
     url = f"{STATS_API_TEAMS}?sportId={SPORT_ID}&leagueId={LEAGUE_ID}&season={season}"
     data = fetch_json(url)
     teams = data.get("teams", [])
     if not teams:
-        # Defensive fallback: no teams tagged for that season yet (e.g.
-        # queried too far ahead of the league confirming next season's
-        # roster) - fall back to the league's currently active teams.
-        url = f"{STATS_API_TEAMS}?sportId={SPORT_ID}&leagueId={LEAGUE_ID}&activeStatus=Active"
-        data = fetch_json(url)
+        fallback_url = f"{STATS_API_TEAMS}?sportId={SPORT_ID}&leagueId={LEAGUE_ID}&season={season - 1}"
+        data = fetch_json(fallback_url)
         teams = data.get("teams", [])
+        url = fallback_url
     return url, teams
 
 
