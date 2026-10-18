@@ -1,5 +1,5 @@
 {
-  "bijgewerkt": "2026-10-18T03:09:11Z",
+  "bijgewerkt": "2026-10-18T10:26:39Z",
   "bron": "https://statsapi.mlb.com/api/v1/standings?leagueId=595&season=2026&sportId=17 | https://statsapi.mlb.com/api/v1/teams?sportId=17&leagueId=595&season=2026",
   "season": 2026,
   "placeholder": true,
