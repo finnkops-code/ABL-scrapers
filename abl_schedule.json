@@ -1,5 +1,5 @@
 {
-  "bijgewerkt": "2026-11-01T12:43:12Z",
+  "bijgewerkt": "2026-11-01T21:43:14Z",
   "bron": "https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2025-09-27&endDate=2026-11-01&hydrate=team,venue | https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2026-11-01&endDate=2027-12-06&hydrate=team,venue",
   "season": 2026,
   "results": [
