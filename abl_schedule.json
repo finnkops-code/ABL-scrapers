@@ -1,6 +1,6 @@
 {
-  "bijgewerkt": "2026-11-25T16:49:30Z",
-  "bron": "https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2025-10-21&endDate=2026-11-25&hydrate=team,venue | https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2026-11-25&endDate=2027-12-30&hydrate=team,venue",
+  "bijgewerkt": "2026-11-26T01:35:54Z",
+  "bron": "https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2025-10-22&endDate=2026-11-26&hydrate=team,venue | https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2026-11-26&endDate=2027-12-31&hydrate=team,venue",
   "season": 2026,
   "results": [
     {
