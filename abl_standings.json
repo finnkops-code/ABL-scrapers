@@ -1,5 +1,5 @@
 {
-  "bijgewerkt": "2026-11-27T01:30:11Z",
+  "bijgewerkt": "2026-11-27T16:11:35Z",
   "bron": "https://statsapi.mlb.com/api/v1/standings?leagueId=595&season=2026&sportId=17",
   "season": 2026,
   "placeholder": false,
@@ -8,53 +8,53 @@
       "rank": 1,
       "team": "Perth Heat",
       "logo": "https://www.mlbstatic.com/team-logos/4068.svg",
-      "wins": 3,
+      "wins": 4,
       "losses": 0,
       "pct": "1.000",
       "games_back": "-",
-      "streak": "W3",
-      "runs_scored": 17,
-      "runs_allowed": 4,
-      "run_differential": 13
+      "streak": "W4",
+      "runs_scored": 24,
+      "runs_allowed": 8,
+      "run_differential": 16
     },
     {
       "rank": 2,
       "team": "Brisbane Bandits",
       "logo": "https://www.mlbstatic.com/team-logos/4065.svg",
       "wins": 3,
-      "losses": 2,
-      "pct": ".600",
-      "games_back": "1.0",
-      "streak": "L1",
-      "runs_scored": 25,
-      "runs_allowed": 25,
-      "run_differential": 0
+      "losses": 3,
+      "pct": ".500",
+      "games_back": "2.0",
+      "streak": "L2",
+      "runs_scored": 29,
+      "runs_allowed": 32,
+      "run_differential": -3
     },
     {
       "rank": 3,
       "team": "Adelaide Giants",
       "logo": "https://www.mlbstatic.com/team-logos/4064.svg",
-      "wins": 2,
+      "wins": 3,
       "losses": 3,
-      "pct": ".400",
+      "pct": ".500",
       "games_back": "2.0",
-      "streak": "W1",
-      "runs_scored": 23,
-      "runs_allowed": 26,
-      "run_differential": -3
+      "streak": "W2",
+      "runs_scored": 39,
+      "runs_allowed": 31,
+      "run_differential": 8
     },
     {
       "rank": 4,
       "team": "Sydney Blue Sox",
       "logo": "https://www.mlbstatic.com/team-logos/4069.svg",
       "wins": 0,
-      "losses": 3,
+      "losses": 4,
       "pct": ".000",
-      "games_back": "3.0",
-      "streak": "L3",
-      "runs_scored": 5,
-      "runs_allowed": 15,
-      "run_differential": -10
+      "games_back": "4.0",
+      "streak": "L4",
+      "runs_scored": 10,
+      "runs_allowed": 31,
+      "run_differential": -21
     }
   ]
 }
