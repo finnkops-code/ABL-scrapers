@@ -1,5 +1,5 @@
 {
-  "bijgewerkt": "2026-11-28T01:07:31Z",
+  "bijgewerkt": "2026-11-28T15:05:04Z",
   "bron": "https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2025-10-24&endDate=2026-11-28&hydrate=team,venue | https://statsapi.mlb.com/api/v1/schedule?sportId=17&leagueId=595&startDate=2026-11-28&endDate=2028-01-02&hydrate=team,venue",
   "season": 2026,
   "results": [
@@ -22,40 +22,10 @@
   "schedule": [
     {
       "league": "Australian Baseball League",
-      "date": "2026-11-28",
-      "game_number": 1,
-      "venue": "Viticon Stadium",
-      "start_time": "2026-11-28T04:30:00Z",
-      "away_team": "Perth Heat",
-      "away_logo": "https://www.mlbstatic.com/team-logos/4068.svg",
-      "away_score": null,
-      "home_team": "Brisbane Bandits",
-      "home_logo": "https://www.mlbstatic.com/team-logos/4065.svg",
-      "home_score": null,
-      "played": false,
-      "boxscore_url": "https://theabl.com.au/game/851270"
-    },
-    {
-      "league": "Australian Baseball League",
-      "date": "2026-11-28",
-      "game_number": 2,
-      "venue": "Viticon Stadium",
-      "start_time": "2026-11-28T08:00:00Z",
-      "away_team": "Perth Heat",
-      "away_logo": "https://www.mlbstatic.com/team-logos/4068.svg",
-      "away_score": null,
-      "home_team": "Brisbane Bandits",
-      "home_logo": "https://www.mlbstatic.com/team-logos/4065.svg",
-      "home_score": null,
-      "played": false,
-      "boxscore_url": "https://theabl.com.au/game/851274"
-    },
-    {
-      "league": "Australian Baseball League",
-      "date": "2026-11-28",
+      "date": "2026-11-29",
       "game_number": 1,
       "venue": "Blacktown International Sportspark",
-      "start_time": "2026-11-28T07:00:00Z",
+      "start_time": "2026-11-29T02:00:00Z",
       "away_team": "Adelaide Giants",
       "away_logo": "https://www.mlbstatic.com/team-logos/4064.svg",
       "away_score": null,
@@ -63,7 +33,7 @@
       "home_logo": "https://www.mlbstatic.com/team-logos/4069.svg",
       "home_score": null,
       "played": false,
-      "boxscore_url": "https://theabl.com.au/game/851235"
+      "boxscore_url": "https://theabl.com.au/game/851233"
     }
   ]
 }
